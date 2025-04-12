@@ -3,8 +3,8 @@ import { SectionCards } from "@/components/section-cards";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
-import data from "./data.json";
 import RecentActivity from "@/components/recent-activity";
+import { data } from "./data";
 
 export default function Page() {
   return (
@@ -23,11 +23,11 @@ export default function Page() {
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
               <SectionCards />
             </div>
-            <div className="flex flex-col gap-4 py-4 mx-auto md:flex-row md:gap-6 md:py-6">
-              <div className="w-full col-span-8">
+            <div className="flex flex-col w-full gap-4 py-4 mx-auto md:flex-row md:gap-6 md:py-6">
+              <div className="w-full md:w-2/3">
                 <DataTable data={data} />
               </div>
-              <div className="w-full col-span-4">
+              <div className="w-full md:w-1/3">
                 <RecentActivity />
               </div>
             </div>
