@@ -48,6 +48,10 @@ function Home() {
               for quick setup and minimal tweaking.
             </li>
             <li>It took me almost 18 hours to complete this assignment.</li>
+            <li>
+              To view the details of the currenycy, you can click on crpto name
+              from table.
+            </li>
             <li>Project is ready for review — you can start reviewing now!</li>
           </ul>
         </section>
