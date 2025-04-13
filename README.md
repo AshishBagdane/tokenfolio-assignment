@@ -59,3 +59,4 @@ That’s it! 🚀 You’re good to go.
 
 -   Make sure you have valid API keys — the app won’t work without them.
 -   You can tweak the cache TTL in the `api.config.ts` file if you want to adjust how long recent activity is saved.
+-   [Live Link](https://tokenfolio-assignment.vercel.app/)
