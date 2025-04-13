@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import {
   FaceFrownIcon,
@@ -11,51 +11,9 @@ import {
   PaperClipIcon,
   XMarkIcon,
 } from "@heroicons/react/20/solid";
-import {
-  Label,
-  Listbox,
-  ListboxButton,
-  ListboxOption,
-  ListboxOptions,
-} from "@headlessui/react";
+import { getRecentlyViewed } from "@/lib/recently-viewed";
+import { CryptoInfo } from "@/types/crypto-info";
 
-const activity = [
-  {
-    id: 1,
-    type: "created",
-    person: { name: "Chelsea Hagon" },
-    date: "7d ago",
-    dateTime: "2023-01-23T10:32",
-  },
-  {
-    id: 2,
-    type: "edited",
-    person: { name: "Chelsea Hagon" },
-    date: "6d ago",
-    dateTime: "2023-01-23T11:03",
-  },
-  {
-    id: 3,
-    type: "sent",
-    person: { name: "Chelsea Hagon" },
-    date: "6d ago",
-    dateTime: "2023-01-23T11:24",
-  },
-  {
-    id: 5,
-    type: "viewed",
-    person: { name: "Alex Curren" },
-    date: "2d ago",
-    dateTime: "2023-01-24T09:12",
-  },
-  {
-    id: 6,
-    type: "paid",
-    person: { name: "Alex Curren" },
-    date: "1d ago",
-    dateTime: "2023-01-24T09:20",
-  },
-];
 const moods = [
   {
     name: "Excited",
@@ -106,7 +64,15 @@ function classNames(...classes: string[]) {
 }
 
 export default function RecentActivity() {
-  const [selected, setSelected] = useState(moods[5]);
+  const [activity, setActivity] = useState(() => {
+    const arr: CryptoInfo[] = [];
+    return arr;
+  });
+
+  // Initialize activity state after component mounts (client-side only)
+  useEffect(() => {
+    setActivity(getRecentlyViewed());
+  }, []);
 
   return (
     <>
@@ -116,65 +82,41 @@ export default function RecentActivity() {
             Recent Activity
           </h3>
         </div>
-        <ul role="list" className="space-y-6 p-4">
-          {activity.map((activityItem, activityItemIdx) => (
-            <li key={activityItem.id} className="relative flex gap-x-4">
-              <div
-                className={classNames(
-                  activityItemIdx === activity.length - 1 ? "h-6" : "-bottom-6",
-                  "absolute left-0 top-0 flex w-6 justify-center"
-                )}
-              >
-                <div className="w-px bg-gray-200" />
-              </div>
-              {activityItem.type === "commented" ? (
-                <>
-                  <div className="flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200">
-                    <div className="flex justify-between gap-x-4">
-                      <div className="py-0.5 text-xs/5 text-gray-500">
-                        <span className="font-medium text-gray-900">
-                          {activityItem.person.name}
-                        </span>{" "}
-                        commented
-                      </div>
-                      <time
-                        dateTime={activityItem.dateTime}
-                        className="flex-none py-0.5 text-xs/5 text-gray-500"
-                      >
-                        {activityItem.date}
-                      </time>
-                    </div>
-                  </div>
-                </>
-              ) : (
+        {activity.length > 0 && (
+          <ul role="list" className="space-y-6 p-4">
+            {activity.map((activityItem, activityItemIdx) => (
+              <li key={activityItem.id} className="relative flex gap-x-4">
+                <div
+                  className={classNames(
+                    activityItemIdx === activity.length - 1
+                      ? "h-6"
+                      : "-bottom-6",
+                    "absolute left-0 top-0 flex w-6 justify-center"
+                  )}
+                >
+                  <div className="w-px bg-gray-200" />
+                </div>
                 <>
                   <div className="relative flex size-6 flex-none items-center justify-center bg-white">
-                    {activityItem.type === "paid" ? (
-                      <CheckCircleIcon
-                        aria-hidden="true"
-                        className="size-6 text-indigo-600"
-                      />
-                    ) : (
-                      <div className="size-1.5 rounded-full bg-gray-100 ring-1 ring-gray-300" />
-                    )}
+                    <div className="size-1.5 rounded-full bg-gray-100 ring-1 ring-gray-300" />
                   </div>
                   <p className="flex-auto py-0.5 text-xs/5 text-gray-500">
                     <span className="font-medium text-gray-900">
-                      {activityItem.person.name}
+                      {activityItem.name}
                     </span>{" "}
-                    {activityItem.type} the invoice.
+                    was viewed.
                   </p>
-                  <time
-                    dateTime={activityItem.dateTime}
-                    className="flex-none py-0.5 text-xs/5 text-gray-500"
-                  >
-                    {activityItem.date}
-                  </time>
                 </>
-              )}
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {activity.length == 0 && (
+          <div className="flex flex-1 items-center justify-center h-full">
+            <span>No activity yet</span>
+          </div>
+        )}
       </div>
     </>
   );

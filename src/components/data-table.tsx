@@ -21,13 +21,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-  IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
   IconChevronsLeft,
   IconChevronsRight,
-  IconLayoutColumns,
-  IconPlus,
   IconTrendingUp,
 } from "@tabler/icons-react";
 import {
@@ -47,9 +44,7 @@ import {
 } from "@tanstack/react-table";
 
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Drawer,
   DrawerClose,
@@ -60,12 +55,6 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -83,131 +72,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { CryptoInfo } from "@/types/crypto-info";
-
-function PriceDisplay({
-  amount,
-  currency,
-  locale,
-}: {
-  amount: number;
-  currency: string;
-  locale: string;
-}) {
-  const formattedPrice = new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-    notation: "compact",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
-
-  return <span className="text-right">{formattedPrice}</span>;
-}
-
-function formatNumber(value: number, locale = "en-US") {
-  return new Intl.NumberFormat(locale, {
-    notation: "compact",
-    compactDisplay: "short",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
-function formatPercentage(value: number, fractionDigits = 2) {
-  return `${Number(value).toLocaleString(undefined, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: fractionDigits,
-  })}%`;
-}
-
-const columns: ColumnDef<CryptoInfo>[] = [
-  {
-    id: "rank",
-    header: (table) => null,
-    cell: ({ row }) => <p>{row.original.rank}</p>,
-  },
-  {
-    accessorKey: "name",
-    header: "Name",
-    cell: ({ row }) => <p>{row.original.name}</p>,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "price",
-    header: () => <div className="text-right">Price</div>,
-    cell: ({ row }) => (
-      <div className="text-right">
-        <PriceDisplay
-          amount={+row.original.priceUsd}
-          currency="USD"
-          locale="en-US"
-        />
-      </div>
-    ),
-    enableHiding: false,
-  },
-  {
-    accessorKey: "marketCapUsd",
-    header: () => <div className="text-right">Market Cap</div>,
-    cell: ({ row }) => (
-      <div className="text-right">
-        <PriceDisplay
-          amount={+row.original.marketCapUsd}
-          currency="USD"
-          locale="en-US"
-        />
-      </div>
-    ),
-  },
-  {
-    accessorKey: "vwap24Hr",
-    header: () => <div className="text-right">VWAP(24Hr)</div>,
-    cell: ({ row }) =>
-      row.original.vwap24Hr && (
-        <div className="text-right">
-          <PriceDisplay
-            amount={+row.original.vwap24Hr}
-            currency="USD"
-            locale="en-US"
-          />
-        </div>
-      ),
-  },
-  {
-    accessorKey: "supply",
-    header: () => <div className="text-right">Supply</div>,
-    cell: ({ row }) => (
-      <p className="text-right">{formatNumber(+row.original.supply)}</p>
-    ),
-    enableHiding: false,
-  },
-  {
-    accessorKey: "volumeUsd24Hr",
-    header: () => <div className="text-right">Volume(24Hr)</div>,
-    cell: ({ row }) => (
-      <div className="text-right">
-        <PriceDisplay
-          amount={+row.original.volumeUsd24Hr}
-          currency="USD"
-          locale="en-US"
-        />
-      </div>
-    ),
-    enableHiding: false,
-  },
-  {
-    accessorKey: "changePercent24Hr",
-    header: () => <div className="text-right">Change(24Hr)</div>,
-    cell: ({ row }) => (
-      <p className="text-right">
-        {formatPercentage(+row.original.changePercent24Hr)}
-      </p>
-    ),
-    enableHiding: false,
-  },
-];
+import CryptoDetails from "./crypto/crypto-details";
+import { formatNumber, formatPercentage, PriceDisplay } from "@/lib/utils";
+import { API_CONFIG } from "@/config/api.config";
+import { addRecentlyViewed } from "@/lib/recently-viewed";
+import { useQuery } from "@tanstack/react-query";
+import { fetchExchangeRate, getMarketData } from "@/services/api.service";
+import { Input } from "./ui/input";
+import { ArrowsUpDownIcon } from "@heroicons/react/24/solid";
 
 function DraggableRow({ row }: { row: Row<CryptoInfo> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
@@ -253,11 +126,205 @@ export function DataTable({ data: initialData }: { data: CryptoInfo[] }) {
     useSensor(TouchSensor, {}),
     useSensor(KeyboardSensor, {})
   );
+  const [currency, setCurrency] = React.useState(API_CONFIG.DEFAULT_CURRENCY);
+
+  const { data: rate = 1, isLoading: isLoadingRate } = useQuery({
+    queryKey: ["exchangeRate", currency],
+    queryFn: () => fetchExchangeRate(currency),
+    staleTime: 1000 * 60 * 5,
+  });
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data?.map(({ id }) => id) || [],
     [data]
   );
+
+  const columns: ColumnDef<CryptoInfo>[] = [
+    {
+      id: "rank",
+      accessorKey: "rank",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Rank
+            <ArrowsUpDownIcon className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <p>{row.original.rank}</p>,
+      enableHiding: true,
+    },
+    {
+      accessorKey: "name",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Name
+            <ArrowsUpDownIcon className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        return (
+          <TableCellViewer
+            item={row.original}
+            currency={currency}
+            exchangeRate={rate}
+          />
+        );
+      },
+      enableHiding: false,
+    },
+    {
+      accessorKey: "price",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Price
+            <ArrowsUpDownIcon className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="text-right">
+          <PriceDisplay
+            amount={parseFloat(row.original.priceUsd) * rate}
+            currency={currency.toUpperCase()}
+            locale="en-US"
+          />
+        </div>
+      ),
+      enableHiding: false,
+    },
+    {
+      accessorKey: "marketCapUsd",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Market Cap
+            <ArrowsUpDownIcon className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) =>
+        row.original.marketCapUsd && (
+          <div className="text-right">
+            <PriceDisplay
+              amount={parseFloat(row.original.marketCapUsd) * rate}
+              currency={currency.toUpperCase()}
+              locale="en-US"
+            />
+          </div>
+        ),
+      enableHiding: true,
+    },
+    {
+      accessorKey: "vwap24Hr",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            VWAP(24Hr)
+            <ArrowsUpDownIcon className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) =>
+        row.original.vwap24Hr && (
+          <div className="text-right">
+            <PriceDisplay
+              amount={parseFloat(row.original.vwap24Hr) * rate}
+              currency={currency.toUpperCase()}
+              locale="en-US"
+            />
+          </div>
+        ),
+      enableHiding: true,
+    },
+    {
+      accessorKey: "supply",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Supply
+            <ArrowsUpDownIcon className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) =>
+        row.original.supply && (
+          <p className="text-right">
+            {formatNumber({ value: +row.original.supply })}
+          </p>
+        ),
+      enableHiding: true,
+    },
+    {
+      accessorKey: "volumeUsd24Hr",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Volume(24Hr)
+            <ArrowsUpDownIcon className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) =>
+        row.original.volumeUsd24Hr && (
+          <div className="text-right">
+            <PriceDisplay
+              amount={parseFloat(row.original.volumeUsd24Hr) * rate}
+              currency={currency.toUpperCase()}
+              locale="en-US"
+            />
+          </div>
+        ),
+      enableHiding: true,
+    },
+    {
+      accessorKey: "changePercent24Hr",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Change(24Hr)
+            <ArrowsUpDownIcon className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) =>
+        row.original.changePercent24Hr && (
+          <p className="text-right">
+            <span className="text-right">
+              {formatPercentage(+row.original.changePercent24Hr)}
+            </span>
+          </p>
+        ),
+      enableHiding: false,
+    },
+  ];
 
   const table = useReactTable({
     data,
@@ -296,226 +363,196 @@ export function DataTable({ data: initialData }: { data: CryptoInfo[] }) {
   }
 
   return (
-    <Tabs
-      defaultValue="outline"
-      className="w-full flex-col justify-start gap-6 max-w-screen"
-    >
-      <div className="flex items-center justify-between px-4 lg:px-6">
-        <Label htmlFor="view-selector" className="sr-only">
-          View
-        </Label>
-        <Select defaultValue="outline">
-          <SelectTrigger
-            className="flex w-fit @4xl/main:hidden"
-            size="sm"
-            id="view-selector"
+    <>
+      <div className="bg-white p-4 py-5 sm:px-6">
+        <h3 className="text-base font-semibold text-gray-900">Market Data</h3>
+      </div>
+      <div className="flex flex-row">
+        <div className="pl-4 pr-4 pb-4">
+          <Select
+            onValueChange={(value) => setCurrency(value)}
+            defaultValue={API_CONFIG.DEFAULT_CURRENCY}
           >
-            <SelectValue placeholder="Select a view" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="outline">Outline</SelectItem>
-            <SelectItem value="past-performance">Past Performance</SelectItem>
-            <SelectItem value="key-personnel">Key Personnel</SelectItem>
-            <SelectItem value="focus-documents">Focus Documents</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <IconLayoutColumns />
-                <span className="hidden lg:inline">Customize Columns</span>
-                <span className="lg:hidden">Columns</span>
-                <IconChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {table
-                .getAllColumns()
-                .filter(
-                  (column) =>
-                    typeof column.accessorFn !== "undefined" &&
-                    column.getCanHide()
-                )
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="outline" size="sm">
-            <IconPlus />
-            <span className="hidden lg:inline">Add Section</span>
-          </Button>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select Currency" />
+            </SelectTrigger>
+
+            <SelectContent>
+              {API_CONFIG.SUPPORTED_CURRENCIES.map((curr) => (
+                <SelectItem key={curr} value={curr}>
+                  {curr.toUpperCase()}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="pl-4 pr-4 pb-4">
+          <Input
+            placeholder="Filter crypto by name"
+            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("name")?.setFilterValue(event.target.value)
+            }
+            className="w-full"
+          />
         </div>
       </div>
-      <TabsContent
-        value="outline"
-        className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
-      >
-        <div className="overflow-hidden rounded-lg border">
-          <DndContext
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-            sensors={sensors}
-            id={sortableId}
-          >
-            <Table>
-              <TableHeader className="bg-muted sticky top-0 z-10">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id} colSpan={header.colSpan}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </TableHead>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows?.length ? (
-                  <SortableContext
-                    items={dataIds}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {table.getRowModel().rows.map((row) => (
-                      <DraggableRow key={row.id} row={row} />
-                    ))}
-                  </SortableContext>
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      No results.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </DndContext>
-        </div>
-        <div className="flex items-center justify-between px-4">
-          <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
-          </div>
-          <div className="flex w-full items-center gap-8 lg:w-fit">
-            <div className="hidden items-center gap-2 lg:flex">
-              <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                Rows per page
-              </Label>
-              <Select
-                value={`${table.getState().pagination.pageSize}`}
-                onValueChange={(value) => {
-                  table.setPageSize(Number(value));
-                }}
-              >
-                <SelectTrigger size="sm" className="w-20" id="rows-per-page">
-                  <SelectValue
-                    placeholder={table.getState().pagination.pageSize}
-                  />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[10, 20, 30, 40, 50].map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
-                    </SelectItem>
+      <div className="overflow-hidden rounded-lg border ml-4 mr-4">
+        <DndContext
+          collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis]}
+          onDragEnd={handleDragEnd}
+          sensors={sensors}
+          id={sortableId}
+        >
+          <Table>
+            <TableHeader className="bg-muted sticky top-0 z-10">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id} colSpan={header.colSpan}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody className="**:data-[slot=table-cell]:first:w-8">
+              {table.getRowModel().rows?.length ? (
+                <SortableContext
+                  items={dataIds}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {table.getRowModel().rows.map((row) => (
+                    <DraggableRow key={row.id} row={row} />
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
-            </div>
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to first page</span>
-                <IconChevronsLeft />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to previous page</span>
-                <IconChevronLeft />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to next page</span>
-                <IconChevronRight />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden size-8 lg:flex"
-                size="icon"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to last page</span>
-                <IconChevronsRight />
-              </Button>
-            </div>
+                </SortableContext>
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </DndContext>
+      </div>
+      <div className="flex items-center justify-between px-4">
+        <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
+          {table.getFilteredSelectedRowModel().rows.length} of{" "}
+          {table.getFilteredRowModel().rows.length} row(s) selected.
+        </div>
+        <div className="flex w-full items-center gap-8 lg:w-fit">
+          <div className="hidden items-center gap-2 lg:flex">
+            <Label htmlFor="rows-per-page" className="text-sm font-medium">
+              Rows per page
+            </Label>
+            <Select
+              value={`${table.getState().pagination.pageSize}`}
+              onValueChange={(value) => {
+                table.setPageSize(Number(value));
+              }}
+            >
+              <SelectTrigger size="sm" className="w-20" id="rows-per-page">
+                <SelectValue
+                  placeholder={table.getState().pagination.pageSize}
+                />
+              </SelectTrigger>
+              <SelectContent side="top">
+                {[10, 20, 30, 40, 50].map((pageSize) => (
+                  <SelectItem key={pageSize} value={`${pageSize}`}>
+                    {pageSize}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex w-fit items-center justify-center text-sm font-medium">
+            Page {table.getState().pagination.pageIndex + 1} of{" "}
+            {table.getPageCount()}
+          </div>
+          <div className="ml-auto flex items-center gap-2 lg:ml-0">
+            <Button
+              variant="outline"
+              className="hidden h-8 w-8 p-0 lg:flex"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <span className="sr-only">Go to first page</span>
+              <IconChevronsLeft />
+            </Button>
+            <Button
+              variant="outline"
+              className="size-8"
+              size="icon"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <span className="sr-only">Go to previous page</span>
+              <IconChevronLeft />
+            </Button>
+            <Button
+              variant="outline"
+              className="size-8"
+              size="icon"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              <span className="sr-only">Go to next page</span>
+              <IconChevronRight />
+            </Button>
+            <Button
+              variant="outline"
+              className="hidden size-8 lg:flex"
+              size="icon"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+            >
+              <span className="sr-only">Go to last page</span>
+              <IconChevronsRight />
+            </Button>
           </div>
         </div>
-      </TabsContent>
-      <TabsContent
-        value="past-performance"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-      <TabsContent value="key-personnel" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-      <TabsContent
-        value="focus-documents"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-    </Tabs>
+      </div>
+    </>
   );
 }
 
-function TableCellViewer({ item }: { item: CryptoInfo }) {
+function TableCellViewer({
+  item,
+  currency,
+  exchangeRate,
+}: {
+  item: CryptoInfo;
+  currency: string;
+  exchangeRate: number;
+}) {
   const isMobile = useIsMobile();
+  const [open, setOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (open) {
+      addRecentlyViewed(item);
+    }
+  }, [open, item]);
 
   return (
-    <Drawer direction={isMobile ? "bottom" : "right"}>
+    <Drawer
+      direction={isMobile ? "bottom" : "right"}
+      open={open}
+      onOpenChange={setOpen}
+    >
       <DrawerTrigger asChild>
         <Button variant="link" className="text-foreground w-fit px-0 text-left">
           {item.name}
@@ -524,28 +561,31 @@ function TableCellViewer({ item }: { item: CryptoInfo }) {
       <DrawerContent>
         <DrawerHeader className="gap-1">
           <DrawerTitle>{item.name}</DrawerTitle>
-          <DrawerDescription>
-            Showing total visitors for the last 6 months
+          <DrawerDescription className="p-2 text-3xl">
+            <PriceDisplay
+              amount={parseFloat(item.priceUsd) * exchangeRate}
+              currency={currency.toUpperCase()}
+              locale="en-US"
+              notation="standard"
+            ></PriceDisplay>
           </DrawerDescription>
         </DrawerHeader>
         <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
-          {!isMobile && (
+          {
             <>
               <Separator />
               <div className="grid gap-2">
-                <div className="flex gap-2 leading-none font-medium">
-                  Trending up by 5.2% this month{" "}
-                  <IconTrendingUp className="size-4" />
-                </div>
                 <div className="text-muted-foreground">
-                  Showing total visitors for the last 6 months. This is just
-                  some random text to test the layout. It spans multiple lines
-                  and should wrap around.
+                  <CryptoDetails
+                    data={item}
+                    currency={currency.toUpperCase()}
+                    exchangeRate={exchangeRate}
+                  />
                 </div>
               </div>
               <Separator />
             </>
-          )}
+          }
         </div>
         <DrawerFooter>
           <DrawerClose asChild>
