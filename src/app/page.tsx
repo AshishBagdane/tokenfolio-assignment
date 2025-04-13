@@ -47,6 +47,7 @@ function Home() {
               </a>{" "}
               for quick setup and minimal tweaking.
             </li>
+            <li>It took me almost 18 hours to complete this assignment.</li>
             <li>Project is ready for review — you can start reviewing now!</li>
           </ul>
         </section>
