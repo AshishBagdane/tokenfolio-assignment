@@ -1,8 +1,4 @@
-import {
-  fetchExchangeRate,
-  fetchMarketTotal,
-  getMarketData,
-} from "@/services/api.service";
+import { fetchMarketTotal, getMarketData } from "@/services/api.service";
 import { useQuery } from "@tanstack/react-query";
 
 export function useCombinedData() {

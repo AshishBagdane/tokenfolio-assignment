@@ -6,7 +6,7 @@ function Home() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-6 lg:px-8">
       <div className="max-w-2xl w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
         <h1 className="text-center text-3xl font-extrabold text-gray-900">
-          Project Instructions
+          Project Preface
         </h1>
 
         {/* Important Note */}
@@ -76,7 +76,7 @@ function Home() {
           href="/dashboard"
           className="flex items-center justify-center p-4 bg-purple-400 rounded-sm text-2xl"
         >
-          Let's Review
+          {"Let's Review"}
         </Link>
         <p className="text-sm text-gray-500 text-center mt-8">
           🚀 Project is ready! Thank you for reviewing.

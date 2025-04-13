@@ -1,10 +1,6 @@
 import { formatNumber, formatPercentage, PriceDisplay } from "@/lib/utils";
 import { CryptoInfo } from "@/types/crypto-info";
 
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(" ");
-}
-
 export default function CryptoDetails({
   data,
   currency,

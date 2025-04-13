@@ -25,7 +25,6 @@ import {
   IconChevronRight,
   IconChevronsLeft,
   IconChevronsRight,
-  IconTrendingUp,
 } from "@tabler/icons-react";
 import {
   ColumnDef,
@@ -78,7 +77,7 @@ import { formatNumber, formatPercentage, PriceDisplay } from "@/lib/utils";
 import { API_CONFIG } from "@/config/api.config";
 import { addRecentlyViewed } from "@/lib/recently-viewed";
 import { useQuery } from "@tanstack/react-query";
-import { fetchExchangeRate, getMarketData } from "@/services/api.service";
+import { fetchExchangeRate } from "@/services/api.service";
 import { Input } from "./ui/input";
 import { ArrowsUpDownIcon } from "@heroicons/react/24/solid";
 
@@ -128,7 +127,7 @@ export function DataTable({ data: initialData }: { data: CryptoInfo[] }) {
   );
   const [currency, setCurrency] = React.useState(API_CONFIG.DEFAULT_CURRENCY);
 
-  const { data: rate = 1, isLoading: isLoadingRate } = useQuery({
+  const { data: rate = 1 } = useQuery({
     queryKey: ["exchangeRate", currency],
     queryFn: () => fetchExchangeRate(currency),
     staleTime: 1000 * 60 * 5,
