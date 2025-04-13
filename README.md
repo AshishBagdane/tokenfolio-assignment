@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# tokenfolio | crypto tracker
+
+## About
+
+tokenfolio fetches live crypto data from **CoinCap API** and exchange rates from **ExchangeRate API** (USD-based). It also remembers your recent activity, thanks to browser caching — with a TTL (time to live) that you can adjust in the config file.
+
+---
+
+## Tech Stack
+
+-   **Next.js** — React framework for building fast, modern web apps
+-   **Axios** — for handling all API requests
+-   **Tailwind CSS** — for styling
+-   **TanStack** (React Query) — for data fetching and caching
+-   **shadcn/ui** + **Tailwind Components** — for reusable, styled components
+
+---
+
+## Features
+
+-   **Crypto Prices**: Live data from CoinCap API
+-   **Exchange Rates**: Get current exchange rates (USD base)
+-   **Custom Data Fetching**: Query the crypto data you need as per the assignment requirements
+-   **Recent Activity**: See what you've recently looked up, with cached history
+-   **Configurable Cache TTL**: Control how long the cached data sticks around via `api.config.ts`
+-   **API Keys Management**: Keys are kept safely in `.env.local` (make sure to create this file!)
+
+---
 
 ## Getting Started
 
-First, run the development server:
+1. **Clone the repository**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+2. **Install dependencies**
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+    ```bash
+    yarn install
+    ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. **Set up environment variables**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+    Create a `.env.local` file in the root of your project, and add the following:
 
-## Learn More
+    ```
+    NEXT_PUBLIC_COINCAP_API_KEY=your_coincap_api_key_here
+    NEXT_PUBLIC_EXCHANGE_RATE_API_KEY=your_exchange_rate_api_key_here
+    ```
 
-To learn more about Next.js, take a look at the following resources:
+4. **Run the application**
+    ```bash
+    yarn dev
+    ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+That’s it! 🚀 You’re good to go.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+### Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+-   Make sure you have valid API keys — the app won’t work without them.
+-   You can tweak the cache TTL in the `api.config.ts` file if you want to adjust how long recent activity is saved.
