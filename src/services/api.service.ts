@@ -13,6 +13,7 @@ export async function getMarketData(): Promise<CryptoInfo[]> {
   const response = await apiClient.get<{ data: CryptoInfo[] }>("assets", {
     params: {
       apiKey: process.env.NEXT_PUBLIC_COINCAP_API_KEY,
+      limit: API_CONFIG.RECORDS_FETCH_LIMIT,
     },
   });
   return response.data.data;
