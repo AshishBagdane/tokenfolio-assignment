@@ -12,3 +12,14 @@ export interface CryptoInfo {
   vwap24Hr: string | null;
   explorer: string | null;
 }
+
+export interface MarketInfo {
+  exchangeId: string;
+  baseId: string;
+  quoteId: string;
+  baseSymbol: string;
+  quoteSymbol: string;
+  volumeUsd24Hr: number;
+  priceUsd: number;
+  volumePercent: number;
+}

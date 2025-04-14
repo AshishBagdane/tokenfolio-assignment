@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_CONFIG } from "@/config/api.config";
-import { CryptoInfo } from "@/types/crypto-info";
+import { CryptoInfo, MarketInfo } from "@/types/crypto-info";
 
 const apiClient = axios.create({
   baseURL: API_CONFIG.COINCAP_BASE_URL,
@@ -83,4 +83,20 @@ export async function fetchMarketTotal() {
     console.error("Error fetching market total:", error);
     throw error;
   }
+}
+
+export async function latestMarketData(
+  slug: string,
+  limit?: number
+): Promise<MarketInfo[]> {
+  const response = await apiClient.get<{ data: MarketInfo[] }>(
+    `assets/${slug}/markets`,
+    {
+      params: {
+        apiKey: process.env.NEXT_PUBLIC_COINCAP_API_KEY,
+        limit: limit || API_CONFIG.MARKET_DATA_LIMIT,
+      },
+    }
+  );
+  return response.data.data;
 }

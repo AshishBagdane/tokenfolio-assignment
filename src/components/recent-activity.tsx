@@ -1,29 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import { getRecentlyViewed } from "@/lib/recently-viewed";
-import { CryptoInfo } from "@/types/crypto-info";
+import EmptyState from "./shared/empty-state";
+import { useRecentlyViewedStore } from "@/store/use-recently-viewed-store";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
 export default function RecentActivity() {
-  const [activity, setActivity] = useState(() => {
-    const arr: CryptoInfo[] = [];
-    return arr;
-  });
-
-  // Initialize activity state after component mounts (client-side only)
-  useEffect(() => {
-    setActivity(getRecentlyViewed());
-  }, []);
+  const activity = useRecentlyViewedStore((state) => state.recentlyViewed);
 
   return (
     <>
-      <div className="flex flex-1 flex-col rounded-b-lg">
-        <div className="bg-white p-4 py-5 sm:px-6">
+      <div className="flex flex-1 flex-col rounded-lg">
+        <div className="bg-white py-5">
           <h3 className="text-base font-semibold text-gray-900">
             Recent Activity
           </h3>
@@ -59,8 +49,11 @@ export default function RecentActivity() {
         )}
 
         {activity.length == 0 && (
-          <div className="flex flex-1 items-center justify-center h-full">
-            <span>No activity yet</span>
+          <div className="relative block w-full rounded-lg p-12 text-center">
+            <EmptyState />
+            <span className="mt-2 text-sm font-semibold text-gray-500">
+              No activity yet
+            </span>
           </div>
         )}
       </div>

@@ -75,11 +75,20 @@ import { CryptoInfo } from "@/types/crypto-info";
 import CryptoDetails from "./crypto/crypto-details";
 import { formatNumber, formatPercentage, PriceDisplay } from "@/lib/utils";
 import { API_CONFIG } from "@/config/api.config";
-import { addRecentlyViewed } from "@/lib/recently-viewed";
 import { useQuery } from "@tanstack/react-query";
-import { fetchExchangeRate } from "@/services/api.service";
+import { fetchExchangeRate, latestMarketData } from "@/services/api.service";
 import { Input } from "./ui/input";
 import { ArrowsUpDownIcon } from "@heroicons/react/24/solid";
+import NoData from "./shared/no-data";
+import { useRecentlyViewedStore } from "@/store/use-recently-viewed-store";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "./ui/accordion";
+import Loader from "./shared/loader";
+import { Card, CardContent } from "./ui/card";
 
 function DraggableRow({ row }: { row: Row<CryptoInfo> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
@@ -439,7 +448,10 @@ export function DataTable({ data: initialData }: { data: CryptoInfo[] }) {
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    No results.
+                    <NoData />
+                    <span className="mt-2 text-sm font-semibold text-gray-500">
+                      No results
+                    </span>
                   </TableCell>
                 </TableRow>
               )}
@@ -447,11 +459,8 @@ export function DataTable({ data: initialData }: { data: CryptoInfo[] }) {
           </Table>
         </DndContext>
       </div>
-      <div className="flex items-center justify-between px-4">
-        <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
+      <div className="flex items-center justify-between px-4 py-4">
+        <div className="text-muted-foreground hidden flex-1 text-sm lg:flex"></div>
         <div className="flex w-full items-center gap-8 lg:w-fit">
           <div className="hidden items-center gap-2 lg:flex">
             <Label htmlFor="rows-per-page" className="text-sm font-medium">
@@ -540,11 +549,20 @@ function TableCellViewer({
   const isMobile = useIsMobile();
   const [open, setOpen] = React.useState(false);
 
+  const addItem = useRecentlyViewedStore((state) => state.addItem);
+
   React.useEffect(() => {
     if (open) {
-      addRecentlyViewed(item);
+      addItem(item);
     }
   }, [open, item]);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: [item.name, item.id],
+    queryFn: () => latestMarketData(item.id),
+    enabled: open,
+    staleTime: 1000 * 60 * 5,
+  });
 
   return (
     <Drawer
@@ -583,6 +601,58 @@ function TableCellViewer({
                 </div>
               </div>
               <Separator />
+              <div className="bg-white">
+                <h3 className="text-base font-semibold text-gray-900">
+                  Market Data
+                </h3>
+              </div>
+              {data?.length == 0 && isLoading && <Loader />}
+              {data?.length == 0 && error && <div>Error: {error.message}</div>}
+
+              <Accordion type="single" collapsible>
+                {data?.length != 0 &&
+                  data?.map((marketInfo, index) => (
+                    <AccordionItem key={index} value={marketInfo.baseSymbol}>
+                      <AccordionTrigger>
+                        {marketInfo.baseSymbol} / {marketInfo.quoteSymbol} —{" "}
+                        {marketInfo.exchangeId}
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <Card className="shadow-lg">
+                          <CardContent className="pt-4 space-y-3">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Price (USD):
+                              </span>
+                              <span>
+                                ${Number(marketInfo.priceUsd).toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                24h Volume (USD):
+                              </span>
+                              <span>
+                                $
+                                {Number(
+                                  marketInfo.volumeUsd24Hr
+                                ).toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Volume %:
+                              </span>
+                              <span>
+                                {Number(marketInfo.volumePercent).toFixed(2)}%
+                              </span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+              </Accordion>
             </>
           }
         </div>
