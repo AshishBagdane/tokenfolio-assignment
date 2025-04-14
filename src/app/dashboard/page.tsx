@@ -8,10 +8,17 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import RecentActivity from "@/components/recent-activity";
 import { useCombinedData } from "@/hooks/use-combined-data";
 
+import Loader from "@/components/shared/loader";
+
 export default function Page() {
   const { data, isLoading, isError, error } = useCombinedData();
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading)
+    return (
+      <>
+        <Loader />
+      </>
+    );
 
   if (isError) return <p>Error: {error.message}</p>;
 
@@ -36,7 +43,7 @@ export default function Page() {
               <div className="w-full md:w-3/4">
                 {data.cryptos?.length > 0 && <DataTable data={data.cryptos} />}
               </div>
-              <div className="w-full md:w-1/4">
+              <div className="w-full p-4 md:w-1/4">
                 <RecentActivity />
               </div>
             </div>
