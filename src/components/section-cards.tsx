@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PriceDisplay } from "@/lib/utils";
+import { formatNumber, PriceDisplay } from "@/lib/utils";
 import { fetchMarketTotal } from "@/services/api.service";
 import { useEffect, useState } from "react";
 
@@ -63,7 +63,9 @@ export function SectionCards() {
           <Card key={index} className="@container/card">
             <CardHeader className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
               <CardDescription className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                {!item.isFractional && item.data}
+                {!item.isFractional && (
+                  <>{formatNumber({ value: item.data })}</>
+                )}
                 {item.isFractional && (
                   <PriceDisplay
                     amount={item.data}
