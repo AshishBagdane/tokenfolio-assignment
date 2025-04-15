@@ -11,13 +11,12 @@ function Home() {
 
         {/* Important Note */}
         <section>
-          <p className="text-red-600 text-center font-medium">
-            🚨 Due to unforeseen circumstances, I’m submitting the assignment
-            early.
+          <p className="text-green-600 text-center font-medium">
+            🙏🏻 Thank You for giving the extra time and feedback on the
+            assignment! 🙏🏻
           </p>
           <p className="text-gray-600 text-center text-sm mt-1">
-            I may continue making improvements — please make sure to pull the
-            latest changes before reviewing!
+            Looking forward to the final evaluation remarks!
           </p>
         </section>
 
@@ -47,12 +46,49 @@ function Home() {
               </a>{" "}
               for quick setup and minimal tweaking.
             </li>
-            <li>It took me almost 18 hours to complete this assignment.</li>
             <li>
-              To view the details of the currenycy, you can click on crpto name
+              It took me almost 18(+8[Extra Time]) hours to complete this
+              assignment.
+            </li>
+            <li>
+              To view the details of the currency, you can click on crpto name
               from table.
             </li>
             <li>Project is ready for review — you can start reviewing now!</li>
+          </ul>
+        </section>
+
+        {/* Improvements */}
+        <section>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2 mt-6">
+            New Improvements
+          </h2>
+          <ul className="list-disc list-inside space-y-2 text-gray-700">
+            <li>
+              Fixed the the number formats on the cards displayed at the top
+            </li>
+            <li>
+              The sidepanel now, on opening fetches latest market data related
+              to the crypto and displays. For details display, used{" "}
+              <code className="bg-gray-100 px-1 rounded text-sm">
+                accordion and card from shadcn/ui
+              </code>
+            </li>
+            <li>
+              Now, the recent activity functionality is dynamic and for this
+              used{" "}
+              <code className="bg-gray-100 px-1 rounded text-sm">zustand</code>.
+            </li>
+            <li>
+              Improved loading state, empty state and visual feedback. Also,
+              improved error-handling with use of{" "}
+              <code className="bg-gray-100 px-1 rounded text-sm">sonner</code>{" "}
+              from shadcn/ui. Made use of{" "}
+              <code className="bg-gray-100 px-1 rounded text-sm">
+                framer-motion
+              </code>{" "}
+              for loader.
+            </li>
           </ul>
         </section>
 
@@ -63,17 +99,16 @@ function Home() {
           </h2>
           <ul className="list-disc list-inside space-y-2 text-gray-700">
             <li>
-              Trigger API data fetch on filter or search actions for better
-              responsiveness.
+              Overall UI/UX design with a proper{" "}
+              <code className="bg-gray-100 px-1 rounded text-sm">
+                design system
+              </code>
             </li>
             <li>
-              Enhance loading states and error handling to improve user
-              experience.
+              Functionality-wise, more relevant details can be displayed. Maybe
+              with the use of proper charts/analytics.
             </li>
-            <li>
-              Stay tuned for ongoing changes — please ensure to pull the latest
-              code!
-            </li>
+            <li>Use of subtle animations (if needed)</li>
           </ul>
         </section>
 
