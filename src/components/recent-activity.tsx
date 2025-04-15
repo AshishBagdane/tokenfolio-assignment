@@ -49,7 +49,7 @@ export default function RecentActivity() {
         )}
 
         {activity.length == 0 && (
-          <div className="relative block w-full rounded-lg p-12 text-center">
+          <div className="flex flex-col h-full w-full items-center justify-center rounded-lg p-12 text-center border">
             <EmptyState />
             <span className="mt-2 text-sm font-semibold text-gray-500">
               No activity yet

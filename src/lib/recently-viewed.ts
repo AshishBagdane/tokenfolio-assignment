@@ -26,7 +26,7 @@ export function getRecentlyViewed(): CryptoInfo[] {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(validItems));
   }
 
-  // Return clean items without the timestamp
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return validItems.map(({ timestamp, ...rest }) => rest);
 }
 
@@ -50,6 +50,7 @@ export function addRecentlyViewed(
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return updated.map(({ timestamp, ...rest }) => rest);
 }
 

@@ -10,26 +10,37 @@ const apiClient = axios.create({
 });
 
 export async function getMarketData(): Promise<CryptoInfo[]> {
-  const response = await apiClient.get<{ data: CryptoInfo[] }>("assets", {
-    params: {
-      apiKey: process.env.NEXT_PUBLIC_COINCAP_API_KEY,
-      limit: API_CONFIG.RECORDS_FETCH_LIMIT,
-    },
-  });
-  return response.data.data;
+  try {
+    const response = await apiClient.get<{ data: CryptoInfo[] }>("assets", {
+      params: {
+        apiKey: process.env.NEXT_PUBLIC_COINCAP_API_KEY,
+        limit: API_CONFIG.RECORDS_FETCH_LIMIT,
+      },
+    });
+    return response.data.data;
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error(error);
+    }
+    throw error;
+  }
 }
 
 export async function fetchExchangeRate(toCurrency: string): Promise<number> {
-  if (toCurrency.toLowerCase() === "usd") return 1;
+  try {
+    if (toCurrency.toLowerCase() === "usd") return 1;
 
-  const response = await axios.get(
-    `https://v6.exchangerate-api.com/v6/${process.env.NEXT_PUBLIC_EXCHANGE_RATE_API_KEY}/latest/USD`
-  );
+    const response = await axios.get(
+      `https://v6.exchangerate-api.com/v6/${process.env.NEXT_PUBLIC_EXCHANGE_RATE_API_KEY}/latest/USD`
+    );
 
-  const rate = response.data.conversion_rates[toCurrency.toUpperCase()];
-  if (!rate) throw new Error(`No exchange rate found for ${toCurrency}`);
-
-  return rate;
+    return response.data.conversion_rates[toCurrency.toUpperCase()];
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error(error);
+    }
+    throw error;
+  }
 }
 
 type MarketTotal = {
@@ -80,7 +91,9 @@ export async function fetchMarketTotal() {
 
     return marketTotal;
   } catch (error) {
-    console.error("Error fetching market total:", error);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Error fetching market total:", error);
+    }
     throw error;
   }
 }
@@ -89,14 +102,21 @@ export async function latestMarketData(
   slug: string,
   limit?: number
 ): Promise<MarketInfo[]> {
-  const response = await apiClient.get<{ data: MarketInfo[] }>(
-    `assets/${slug}/markets`,
-    {
-      params: {
-        apiKey: process.env.NEXT_PUBLIC_COINCAP_API_KEY,
-        limit: limit || API_CONFIG.MARKET_DATA_LIMIT,
-      },
+  try {
+    const response = await apiClient.get<{ data: MarketInfo[] }>(
+      `assets/${slug}/markets`,
+      {
+        params: {
+          apiKey: process.env.NEXT_PUBLIC_COINCAP_API_KEY,
+          limit: limit || API_CONFIG.MARKET_DATA_LIMIT,
+        },
+      }
+    );
+    return response.data.data;
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error(`Error fetching market for ${slug}: `, error);
     }
-  );
-  return response.data.data;
+    throw error;
+  }
 }

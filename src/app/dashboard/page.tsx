@@ -9,9 +9,10 @@ import RecentActivity from "@/components/recent-activity";
 import { useCombinedData } from "@/hooks/use-combined-data";
 
 import Loader from "@/components/shared/loader";
+import EmptyState from "@/components/shared/empty-state";
 
 export default function Page() {
-  const { data, isLoading, isError, error } = useCombinedData();
+  const { data, isLoading, isError } = useCombinedData();
 
   if (isLoading)
     return (
@@ -20,7 +21,17 @@ export default function Page() {
       </>
     );
 
-  if (isError) return <p>Error: {error.message}</p>;
+  if (isError)
+    return (
+      <>
+        <div className="flex flex-col h-screen w-screen items-center justify-center rounded-lg p-12 text-center border">
+          <EmptyState />
+          <span className="mt-2 text-sm font-semibold text-gray-500">
+            Oops, something went wrong!
+          </span>
+        </div>
+      </>
+    );
 
   if (!data || data.cryptos.length === 0) return <p>No data found.</p>;
   return (

@@ -71,7 +71,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CryptoInfo } from "@/types/crypto-info";
+import { CryptoInfo, MarketInfo } from "@/types/crypto-info";
 import CryptoDetails from "./crypto/crypto-details";
 import { formatNumber, formatPercentage, PriceDisplay } from "@/lib/utils";
 import { API_CONFIG } from "@/config/api.config";
@@ -87,8 +87,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "./ui/accordion";
-import Loader from "./shared/loader";
 import { Card, CardContent } from "./ui/card";
+import { toast } from "sonner";
+import EmptyState from "./shared/empty-state";
 
 function DraggableRow({ row }: { row: Row<CryptoInfo> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
@@ -136,16 +137,22 @@ export function DataTable({ data: initialData }: { data: CryptoInfo[] }) {
   );
   const [currency, setCurrency] = React.useState(API_CONFIG.DEFAULT_CURRENCY);
 
-  const { data: rate = 1 } = useQuery({
+  const { data: rate = 1, error } = useQuery({
     queryKey: ["exchangeRate", currency],
     queryFn: () => fetchExchangeRate(currency),
-    staleTime: 1000 * 60 * 5,
+    staleTime: API_CONFIG.CACHE_TTL,
   });
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data?.map(({ id }) => id) || [],
     [data]
   );
+
+  React.useEffect(() => {
+    if (error) {
+      toast.error("Unable to fetch exchange rate!");
+    }
+  }, [error]);
 
   const columns: ColumnDef<CryptoInfo>[] = [
     {
@@ -555,14 +562,20 @@ function TableCellViewer({
     if (open) {
       addItem(item);
     }
-  }, [open, item]);
+  }, [open, addItem, item]);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<MarketInfo[]>({
     queryKey: [item.name, item.id],
     queryFn: () => latestMarketData(item.id),
     enabled: open,
-    staleTime: 1000 * 60 * 5,
+    staleTime: API_CONFIG.CACHE_TTL,
   });
+
+  React.useEffect(() => {
+    if (error) {
+      toast.error("Unable to fetch market data!");
+    }
+  }, [error]);
 
   return (
     <Drawer
@@ -606,13 +619,22 @@ function TableCellViewer({
                   Market Data
                 </h3>
               </div>
-              {data?.length == 0 && isLoading && <Loader />}
-              {data?.length == 0 && error && <div>Error: {error.message}</div>}
+              {isLoading && <span>Loading...</span>}
+              {error && (
+                <>
+                  <div className="relative block w-full rounded-lg p-12 text-center">
+                    <EmptyState />
+                    <span className="mt-2 text-sm font-semibold text-gray-500">
+                      Oops, Something went wrong!
+                    </span>
+                  </div>
+                </>
+              )}
 
               <Accordion type="single" collapsible>
                 {data?.length != 0 &&
                   data?.map((marketInfo, index) => (
-                    <AccordionItem key={index} value={marketInfo.baseSymbol}>
+                    <AccordionItem key={index} value={marketInfo.exchangeId}>
                       <AccordionTrigger>
                         {marketInfo.baseSymbol} / {marketInfo.quoteSymbol} —{" "}
                         {marketInfo.exchangeId}

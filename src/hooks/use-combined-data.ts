@@ -1,3 +1,4 @@
+import { API_CONFIG } from "@/config/api.config";
 import { fetchMarketTotal, getMarketData } from "@/services/api.service";
 import { useQuery } from "@tanstack/react-query";
 
@@ -12,6 +13,6 @@ export function useCombinedData() {
 
       return { cryptos, marketTotal };
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: API_CONFIG.CACHE_TTL,
   });
 }
