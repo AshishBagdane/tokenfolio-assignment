@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const tokenfolio = {
   name: "Crypto Tracker",
   email: "contact@tokenfolio.co",
@@ -11,19 +13,23 @@ export function SiteHeader() {
   return (
     <div>
       <div>
-        <img
-          alt=""
+        <Image
+          alt="header background image"
           src={tokenfolio.backgroundImage}
           className="h-32 w-full object-cover lg:h-48"
+          width={1024}
+          height={256}
         />
       </div>
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div className="-mt-12 sm:-mt-16 sm:flex sm:items-end sm:space-x-5">
           <div className="flex">
-            <img
-              alt=""
+            <Image
+              alt="avatar header image"
               src={tokenfolio.avatar}
               className="size-24 rounded-b-sm ring-4 ring-white sm:size-32"
+              width={256}
+              height={256}
             />
           </div>
           <div className="mt-6 sm:flex sm:min-w-0 sm:flex-1 sm:items-center sm:justify-end sm:space-x-6 sm:pb-1">
